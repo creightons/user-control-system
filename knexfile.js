@@ -5,4 +5,7 @@ module.exports = {
 	connection: {
 		filename: process.env.SQLITE_PATH,
 	},
+	seeds: {
+		directory: './seeds',
+	},
 };

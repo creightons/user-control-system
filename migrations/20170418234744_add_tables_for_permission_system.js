@@ -2,10 +2,10 @@
 exports.up = function(knex, Promise) {
 
 	return createPermissions()
-		.then(createUserPermissions())
-		.then(createGroups())
-		.then(createUsersInGroups())
-		.then(createGroupPermissions());
+		.then(() => createUserPermissions())
+		.then(() => createGroups())
+		.then(() => createUsersInGroups())
+		.then(() => createGroupPermissions());
 
 	function createPermissions() {
 		return knex.schema.createTable('permissions', table => {
@@ -15,6 +15,7 @@ exports.up = function(knex, Promise) {
 	}
 
 	function createUserPermissions() {
+		console.log('I was called');
 		return knex.schema.createTable('userpermissions', table => {
 			table.integer('userid').notNullable();
 			table.integer('permissionid').notNullable();
