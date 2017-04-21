@@ -1,5 +1,5 @@
 
-class Permissions() {
+class Permission {
 
 	constructor(knex) {
 		this.knex = knex;
@@ -40,4 +40,4 @@ class Permissions() {
 	}
 }
 
-module.exports = Permissions;
+module.exports = Permission;

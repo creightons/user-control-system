@@ -2,6 +2,8 @@ const Mocha = require('mocha'),
 	glob = require('glob'),
 	path = require('path');
 
+require('dotenv').config();
+
 const mocha = new Mocha();
 
 glob('**/*.test.js', function(err, files) {
