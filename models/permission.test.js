@@ -1,13 +1,7 @@
 const { assert } = require('chai'),
-	knex = require('knex')({
-		client: 'sqlite3',
-		connection: {
-			filename: process.env.SQLITE_PATH,
-		},
-	}),
+	config = require('../knexfile'),
+	knex = require('knex')(config),
 	PermissionsModel = require('./permission');
-
-console.log('path = ', process.env.SQLITE_PATH);
 
 const Permissions = new PermissionsModel(knex);
 
