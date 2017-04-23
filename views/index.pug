@@ -1,0 +1,16 @@
+extends base.pug
+
+block content
+	
+	div Login
+
+	form(action='login' method='POST')
+		label Username
+		input(name='username' type='text')
+		br
+		
+		label Password
+		input(name='password' type='password')
+		br
+		
+		input(type='submit' value='Submit')
