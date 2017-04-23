@@ -10,6 +10,8 @@ const jwt = require('jsonwebtoken'),
 	knex = require('knex')(knexConfig),
 	UserModel = require('./models/user'),
 	User = new UserModel(knex),
+	PermissionModel = require('./models/permission'),
+	Permissions = new PermissionModel(knex),
 	dotenv = require('dotenv');
 
 dotenv.config();
@@ -19,6 +21,10 @@ dotenv.config();
 ****************************************************/
 const JWT_COOKIE_NAME = 'AUTH_TOKEN';
 const THIRTY_MINUTES = 30 * 60 * 1000;
+const VIEW_POSTS_PERMISSION_ID = 1;
+const VIEW_USER_ACCOUNTS_PERMISSION_ID = 2;
+const DELETE_POSTS_PERMISSION_ID = 3;
+const DELETE_USER_ACCOUNTS_PERMISSION_ID = 4;
 
 /****************************************************
 * Middlewares + Configuration
@@ -35,7 +41,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 /****************************************************
-* Functions
+* Custom Middleware
 ****************************************************/
 function handleError(err, res) {
 	console.log('err = ', err.stack);
@@ -91,6 +97,34 @@ function isAuthorized(req, res, next) {
 	next();
 }
 
+function getPermissionGatekeeper(PERMISSION_ID) {
+	return (req, res, next) => {
+		const userId = req.user.id
+
+		Permissions
+			.getByUserId(userId)
+			.then(userPermissions => {
+				const validPermission = userPermissions.find(
+					permission => permission.id === PERMISSION_ID
+				);
+
+				// If the current user does not have the required permission, deny access to the user
+				if (validPermission === undefined) {
+					return res.status(400).render('forbidden');
+				}
+				else {
+					return next();
+				}
+			})
+			.catch(err => handleError(err, res));
+	}
+}
+
+const viewPostsGatekeeper = getPermissionGatekeeper(VIEW_POSTS_PERMISSION_ID);
+const viewUserAccountsGatekeeper = getPermissionGatekeeper(VIEW_USER_ACCOUNTS_PERMISSION_ID);
+const deletePostsGatekeeper = getPermissionGatekeeper(DELETE_POSTS_PERMISSION_ID);
+const deleteUserAccountsGatekeeper = getPermissionGatekeeper(DELETE_USER_ACCOUNTS_PERMISSION_ID);
+
 /****************************************************
 * Routes
 ****************************************************/
@@ -107,15 +141,33 @@ app.post('/login', login, (req, res) => {
 	res.status(200).redirect('/main');
 });
 
-app.post('/logout', isAuthorized, (req, res) => {
+// All routes after this are private
+app.use(isAuthorized);
+
+app.post('/logout', (req, res) => {
 	res.clearCookie(JWT_COOKIE_NAME);
 	res.status(301).redirect('/');
 });
 
+app.get('/view-posts', viewPostsGatekeeper, (req, res) => {
+	res.status(200).render('posts');
+});
+
+app.get('/view-accounts', viewUserAccountsGatekeeper, (req, res) => {
+	res.status(200).render('accounts');
+});
+
+app.get('/delete-posts', deletePostsGatekeeper, (req, res) => {
+	res.status(200).render('delete-posts');
+});
+
+app.get('/delete-accounts', deleteUserAccountsGatekeeper, (req, res) => {
+	res.status(200).render('delete-accounts');
+});
 
 /****************************************************
 * Start App
 ****************************************************/
 app.listen(process.env.SERVER_PORT, () => {
-	console.log(`server is live on port ${process.env.SERVER_PORT}...`);
+	console.log(`Server is live on port ${process.env.SERVER_PORT}...`);
 });
